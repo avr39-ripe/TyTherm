@@ -43,17 +43,17 @@ void onConfiguration(HttpRequest &request, HttpResponse &response)
 				if (PrevStaEnable && ActiveConfig.StaEnable)
 				{
 					WifiStation.waitConnection(StaConnectOk, 14, StaConnectFail);
-					StaStarted = false;
-					staTimer.initializeMs(StaConnectTimeout, StaDisconnect).start(false);
 					WifiStation.config(ActiveConfig.StaSSID, ActiveConfig.StaPassword);
 				}
 				else if (ActiveConfig.StaEnable)
 				{
-					WifiStation.enable(true);
 					WifiStation.waitConnection(StaConnectOk, 14, StaConnectFail);
-					StaStarted = false;
-					staTimer.initializeMs(StaConnectTimeout, StaDisconnect).start(false);
+					WifiStation.enable(true);
 					WifiStation.config(ActiveConfig.StaSSID, ActiveConfig.StaPassword);
+				}
+				else
+				{
+					WifiStation.disconnect();
 				}
 			}
 		}

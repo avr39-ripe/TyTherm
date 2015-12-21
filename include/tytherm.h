@@ -12,10 +12,7 @@ extern unsigned long counter;
 void startWebServer();
 
 //STA disconnecter
-extern Timer staTimer;
-extern bool StaStarted;
-const uint16_t StaConnectTimeout = 15000; //15 sec to connect in STA mode
-void StaDisconnect();
+const uint16_t StaConnectTimeout = 20; //15 sec to connect in STA mode
 void StaConnectOk();
 void StaConnectFail();
 
