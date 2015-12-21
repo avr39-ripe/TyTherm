@@ -41,16 +41,16 @@
 				<div class="panel-body">
 				  <form id="form_netcfg" method="POST">
 					  <div class="form-group">
-						<label>Name</label>
-						<input type="text" id="SSID" name="SSID" class="form-control" placeholder="Enter SSID" value="{SSID}">
+						<label for="StaSSID">Name</label>
+						<input type="text" id="StaSSID" name="StaSSID" class="form-control" placeholder="Enter SSID" value="{StaSSID}">
 					  </div>
 					  <div class="form-group">
 						<label for="Password">Password</label>
-						<input type="password" id="Password" name="Password" class="form-control" placeholder="Password">
+						<input type="password" id="StaPassword" name="StaPassword" class="form-control" placeholder="Password">
 					  </div>
 					  <div class="form-group">
-						<label for="sta_enable">Enable WIFI Client</label>
-						<input type="checkbox" id="sta_enable" name="sta_enable" class="form-control">
+						<label for="StaEnable">Enable WIFI Client</label>
+						<input type="checkbox" id="StaEnable" name="StaEnable" class="form-control">
 					  </div>
 					  <button type="submit" class="btn btn-success">Save network</button>
 					  <button type="button" id="netcfg_cancel" class="btn btn-link">Cancel</button>

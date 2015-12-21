@@ -10,12 +10,12 @@ struct ThermConfig
 {
 	ThermConfig()
 	{
-		sta_enable = 1; //Enable WIFI Client
+		StaEnable = 1; //Enable WIFI Client
 	}
 
-	String NetworkSSID;
-	String NetworkPassword;
-	uint8_t sta_enable;
+	String StaSSID;
+	String StaPassword;
+	uint8_t StaEnable;
 
 // ThermControl settings
 

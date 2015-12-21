@@ -32,11 +32,29 @@ void onConfiguration(HttpRequest &request, HttpResponse &response)
 			JsonObject& root = jsonBuffer.parseObject(request.getBody());
 			root.prettyPrintTo(Serial);
 
-			if (root["NetworkSSID"].success()) // Settings
+			if (root["StaSSID"].success()) // Settings
 			{
-				ActiveConfig.NetworkSSID = root["NetworkSSID"];
-				ActiveConfig.NetworkPassword = root["NetworkPassword"];
-				ActiveConfig.sta_enable = root["sta_enable"];
+				uint8_t PrevStaEnable = ActiveConfig.StaEnable;
+
+				ActiveConfig.StaSSID = String((const char *)root["StaSSID"]);
+				ActiveConfig.StaPassword = String((const char *)root["StaPassword"]);
+				ActiveConfig.StaEnable = root["StaEnable"];
+
+				if (PrevStaEnable && ActiveConfig.StaEnable)
+				{
+					WifiStation.waitConnection(StaConnectOk, 14, StaConnectFail);
+					StaStarted = false;
+					staTimer.initializeMs(StaConnectTimeout, StaDisconnect).start(false);
+					WifiStation.config(ActiveConfig.StaSSID, ActiveConfig.StaPassword);
+				}
+				else if (ActiveConfig.StaEnable)
+				{
+					WifiStation.enable(true);
+					WifiStation.waitConnection(StaConnectOk, 14, StaConnectFail);
+					StaStarted = false;
+					staTimer.initializeMs(StaConnectTimeout, StaDisconnect).start(false);
+					WifiStation.config(ActiveConfig.StaSSID, ActiveConfig.StaPassword);
+				}
 			}
 		}
 		saveConfig(ActiveConfig);
@@ -53,9 +71,9 @@ void onConfiguration_json(HttpRequest &request, HttpResponse &response)
 	JsonObjectStream* stream = new JsonObjectStream();
 	JsonObject& json = stream->getRoot();
 
-	json["SSID"] = ActiveConfig.NetworkSSID;
-	json["Password"] = ActiveConfig.NetworkPassword;
-	json["sta_enable"] = ActiveConfig.sta_enable;
+	json["StaSSID"] = ActiveConfig.StaSSID;
+	json["StaPassword"] = ActiveConfig.StaPassword;
+	json["StaEnable"] = ActiveConfig.StaEnable;
 
 	response.sendJsonObject(stream);
 }

@@ -3,11 +3,11 @@ function get_config() {
 			function(data) {
 				$.each(data, function(key, value){
             		document.getElementById(key).value = value;
-            	if (data.sta_enable == 1) {
-            		document.getElementById('sta_enable').checked = true;
+            	if (data.StaEnable == 1) {
+            		document.getElementById('StaEnable').checked = true;
             	}
             	else
-            		document.getElementById('sta_enable').checked = false;
+            		document.getElementById('StaEnable').checked = false;
         		});
             });
 }
@@ -16,9 +16,9 @@ function get_config() {
 function post_netcfg(event) {
 	event.preventDefault();
 	var formData = {
-			'SSID'					:	document.getElementById('SSID').value,
-			'Password'				:	document.getElementById('Password').value,
-			'sta_enable'			:	(document.getElementById('sta_enable').checked ? 1 : 0)
+			'StaSSID'					:	document.getElementById('StaSSID').value,
+			'StaPassword'				:	document.getElementById('StaPassword').value,
+			'StaEnable'					:	(document.getElementById('StaEnable').checked ? 1 : 0)
 			};
 	$.ajax({
         type        : 'POST',

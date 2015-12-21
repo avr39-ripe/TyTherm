@@ -6,9 +6,10 @@
 #include <tytherm.h>
 
 Timer counterTimer;
-void counter_loop();
+Timer staTimer;
 
-bool web_ap_started = false;
+void counter_loop();
+bool StaStarted;
 
 unsigned long counter = 0;
 
@@ -28,11 +29,10 @@ void init()
 
 	ActiveConfig = loadConfig();
 
-	if (ActiveConfig.sta_enable == 1)
+	if (ActiveConfig.StaEnable)
 	{
-		WifiStation.config(ActiveConfig.NetworkSSID, ActiveConfig.NetworkPassword);
 		WifiStation.enable(true);
-		WifiStation.waitConnection(connectOk, 20, connectFail); // We recommend 20+ seconds for connection timeout at start
+		WifiStation.waitConnection(StaConnectOk, 14, StaConnectFail); // We recommend 20+ seconds for connection timeout at start
 	}
 	else
 	{
@@ -43,6 +43,10 @@ void init()
 	WifiAccessPoint.enable(true);
 	startWebServer();
 
+	StaStarted = false;
+	staTimer.initializeMs(StaConnectTimeout, StaDisconnect).start(false);
+	WifiStation.config(ActiveConfig.StaSSID, ActiveConfig.StaPassword);
+
 	counterTimer.initializeMs(1000, counter_loop).start();
 }
 
@@ -50,31 +54,25 @@ void counter_loop()
 {
 	counter++;
 }
-void connectOk()
+
+void StaDisconnect()
 {
-	debugf("connected");
-//	WifiAccessPoint.enable(false);
-	if(! web_ap_started)
+	if(! StaStarted)
 	{
-		web_ap_started = true;
-		WifiAccessPoint.config("TyTherm", "20040229", AUTH_WPA2_PSK);
-		WifiAccessPoint.enable(false);
-//		startWebServer();
-//		procTimer.restart();
+		wifi_station_disconnect();
+		Serial.println("STA DISCONNECTED!");
 	}
 }
-
-void connectFail()
+void StaConnectOk()
 {
-	debugf("connection FAILED");
+	Serial.println("connected to AP");
+	StaStarted = true;
+	WifiAccessPoint.enable(false);
+}
 
-	if(! web_ap_started)
-	{
-		web_ap_started = true;
-		WifiAccessPoint.config("TyTherm", "20040229", AUTH_WPA2_PSK);
-		WifiAccessPoint.enable(true);
-		startWebServer();
-	}
-
-	WifiStation.waitConnection(connectOk); // Wait connection
+void StaConnectFail()
+{
+	Serial.println("connection FAILED");
+	WifiAccessPoint.config("TyTherm", "20040229", AUTH_WPA2_PSK);
+	WifiAccessPoint.enable(true);
 }
