@@ -21,45 +21,25 @@ void onConfiguration(HttpRequest &request, HttpResponse &response)
 	{
 		debugf("Update config");
 		// Update config
-		if (request.getPostParameter("SSID").length() > 0) // Network
-		{
-			ActiveConfig.NetworkSSID = request.getPostParameter("SSID");
-			ActiveConfig.NetworkPassword = request.getPostParameter("Password");
-			ActiveConfig.sta_enable = request.getPostParameter("sta_enable").toInt();
-
-			if (ActiveConfig.sta_enable == 1)
-			{
-				WifiStation.config(ActiveConfig.NetworkSSID, ActiveConfig.NetworkPassword);
-				WifiStation.enable(true);
-			}
-			else
-			{
-				WifiStation.enable(false);
-			}
-
-		}
-
 		if (request.getBody() == NULL)
-			Serial.println("NULL bodyBuf");
+		{
+			debugf("NULL bodyBuf");
+			return;
+		}
 		else
 		{
-			Serial.print("HERE IS bodyBuf ! ");
-			Serial.println(request.getBody());
 			StaticJsonBuffer<200> jsonBuffer;
 			JsonObject& root = jsonBuffer.parseObject(request.getBody());
 			root.prettyPrintTo(Serial);
 
-//			if (root["start_minutes"].success()) // Settings
-//			{
-//				ActiveConfig.start_minutes = root["start_minutes"];
-//				ActiveConfig.stop_minutes = root["stop_minutes"];
-//				ActiveConfig.cycle_duration = root["cycle_duration"];
-//				ActiveConfig.cycle_interval = root["cycle_interval"];
-//
-//			}
+			if (root["NetworkSSID"].success()) // Settings
+			{
+				ActiveConfig.NetworkSSID = root["NetworkSSID"];
+				ActiveConfig.NetworkPassword = root["NetworkPassword"];
+				ActiveConfig.sta_enable = root["sta_enable"];
+			}
 		}
 		saveConfig(ActiveConfig);
-	//	response.redirect();
 	}
 	else
 	{

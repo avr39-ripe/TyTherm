@@ -23,7 +23,9 @@ function post_netcfg(event) {
 	$.ajax({
         type        : 'POST',
         url         : '/config',
-        data        : formData
+        contentType	: 'application/json; charset=utf-8',
+        data        : JSON.stringify(formData),
+        dataType	: 'json'
     })
 }
 
