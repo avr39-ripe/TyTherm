@@ -1,12 +1,10 @@
-#include "../include/configuration.h"
-
-#include <SmingCore/SmingCore.h>
+#include <tytherm.h>
 
 ThermConfig ActiveConfig;
 
 ThermConfig loadConfig()
 {
-	DynamicJsonBuffer jsonBuffer;
+	StaticJsonBuffer<ConfigJsonBufferSize> jsonBuffer;
 	ThermConfig cfg;
 	if (fileExist(THERM_CONFIG_FILE))
 	{
@@ -33,7 +31,7 @@ ThermConfig loadConfig()
 
 void saveConfig(ThermConfig& cfg)
 {
-	DynamicJsonBuffer jsonBuffer;
+	StaticJsonBuffer<ConfigJsonBufferSize> jsonBuffer;
 	JsonObject& root = jsonBuffer.createObject();
 
 	JsonObject& network = jsonBuffer.createObject();
@@ -42,7 +40,7 @@ void saveConfig(ThermConfig& cfg)
 	network["StaPassword"] = cfg.StaPassword.c_str();
 	network["StaEnable"] = cfg.StaEnable;
 
-	char buf[4048];
+	char buf[ConfigFileBufferSize];
 	root.prettyPrintTo(buf, sizeof(buf));
 	fileSetContent(THERM_CONFIG_FILE, buf);
 }

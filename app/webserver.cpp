@@ -1,7 +1,3 @@
-#include <user_config.h>
-#include <SmingCore/SmingCore.h>
-
-#include <configuration.h>
 #include <tytherm.h>
 
 
@@ -28,9 +24,9 @@ void onConfiguration(HttpRequest &request, HttpResponse &response)
 		}
 		else
 		{
-			StaticJsonBuffer<200> jsonBuffer;
+			StaticJsonBuffer<ConfigJsonBufferSize> jsonBuffer;
 			JsonObject& root = jsonBuffer.parseObject(request.getBody());
-			root.prettyPrintTo(Serial);
+			root.prettyPrintTo(Serial); //Uncomment it for debuging
 
 			if (root["StaSSID"].success()) // Settings
 			{
@@ -42,18 +38,20 @@ void onConfiguration(HttpRequest &request, HttpResponse &response)
 
 				if (PrevStaEnable && ActiveConfig.StaEnable)
 				{
-					WifiStation.waitConnection(StaConnectOk, 14, StaConnectFail);
+					WifiStation.waitConnection(StaConnectOk, StaConnectTimeout, StaConnectFail);
 					WifiStation.config(ActiveConfig.StaSSID, ActiveConfig.StaPassword);
 				}
 				else if (ActiveConfig.StaEnable)
 				{
-					WifiStation.waitConnection(StaConnectOk, 14, StaConnectFail);
+					WifiStation.waitConnection(StaConnectOk, StaConnectTimeout, StaConnectFail);
 					WifiStation.enable(true);
 					WifiStation.config(ActiveConfig.StaSSID, ActiveConfig.StaPassword);
 				}
 				else
 				{
 					WifiStation.disconnect();
+					WifiAccessPoint.config("TyTherm", "20040229", AUTH_WPA2_PSK);
+					WifiAccessPoint.enable(true);
 				}
 			}
 		}
