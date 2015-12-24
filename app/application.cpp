@@ -32,6 +32,11 @@ void init()
 	startWebServer();
 
 	counterTimer.initializeMs(1000, counter_loop).start();
+
+	OneWire ds(onewire_pin);
+	ds.begin();
+
+
 }
 
 void counter_loop()

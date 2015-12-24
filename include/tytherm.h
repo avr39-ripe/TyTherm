@@ -3,6 +3,7 @@
 #include <configuration.h>
 #include <SmingCore/SmingCore.h>
 #include <Libraries/OneWire/OneWire.h>
+#include <tempsensor.h>
 
 //OneWire stuff
 const uint8_t onewire_pin = 2;
