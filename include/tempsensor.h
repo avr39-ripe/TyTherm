@@ -1,6 +1,7 @@
 #ifndef INCLUDE_TEMPSENSOR_H_
 #define INCLUDE_TEMPSENSOR_H_
-#include <tytherm.h>
+#include <SmingCore/SmingCore.h>
+#include <Libraries/OneWire/OneWire.h>
 
 class TempSensor {
 public:

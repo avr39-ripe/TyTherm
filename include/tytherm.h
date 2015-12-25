@@ -9,6 +9,8 @@
 const uint8_t onewire_pin = 2;
 extern OneWire ds;
 
+extern TempSensor tempSensor;
+
 extern unsigned long counter; // Kind of heartbeat counter
 
 const uint8_t ConfigJsonBufferSize = 200; // Application configuration JsonBuffer size ,increase it if you have large config

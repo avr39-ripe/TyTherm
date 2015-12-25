@@ -5,6 +5,9 @@ Timer counterTimer;
 void counter_loop();
 unsigned long counter = 0;
 
+OneWire ds(onewire_pin);
+TempSensor tempSensor(ds);
+
 void init()
 {
 	spiffs_mount(); // Mount file system, in order to work with files
@@ -33,9 +36,8 @@ void init()
 
 	counterTimer.initializeMs(1000, counter_loop).start();
 
-	OneWire ds(onewire_pin);
 	ds.begin();
-
+	tempSensor.start();
 
 }
 
