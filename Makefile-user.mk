@@ -26,4 +26,6 @@
 # Com port speed
 # COM_SPEED	= 115200
 
-SPIFF_SIZE     = 196608
+SPIFF_SIZE = 196608
+MODULES = app lib/tempsensor
+USER_CFLAGS = -Ilib/tempsensor

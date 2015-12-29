@@ -6,7 +6,7 @@ void counter_loop();
 unsigned long counter = 0;
 
 OneWire ds(onewire_pin);
-TempSensor tempSensor(ds);
+TempSensorOW tempSensor(ds);
 
 void init()
 {
