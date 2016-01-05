@@ -28,4 +28,4 @@
 
 SPIFF_SIZE = 196608
 MODULES = app lib/tempsensor
-USER_CFLAGS = -Ilib/tempsensor
+EXTRA_INCLUDES = lib/tempsensor
