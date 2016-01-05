@@ -7,6 +7,7 @@ class TempSensor
 {
 public:
 	TempSensor(uint16_t refresh = 4000);
+	virtual ~TempSensor() {};
 	void start();
 	void stop();
 	float getTemp() { return _temperature; };
@@ -14,15 +15,16 @@ protected:
 	float _temperature;
 	uint16_t _refresh;
 	Timer _refreshTimer;
-	void _temp_start();
+	virtual void _temp_start();
 };
 
 class TempSensorOW : public TempSensor
 {
 public:
 	TempSensorOW(OneWire &ds, uint16_t refresh = 4000, uint8_t tries = 5);
+	virtual ~TempSensorOW() {};
 private:
-	void _temp_start();
+	virtual void _temp_start();
 	void _temp_read();
 	OneWire *_ds;
 	uint8_t _tries;
@@ -36,8 +38,9 @@ class TempSensorHttp : public TempSensor
 {
 public:
 	TempSensorHttp(String url, uint16_t refresh = 4000);
+	virtual ~TempSensorHttp() {};
 private:
-	void _temp_start();
+	virtual void _temp_start();
 	void _temp_read(HttpClient& client, bool successful);
 	HttpClient _httpClient;
 	String _url;

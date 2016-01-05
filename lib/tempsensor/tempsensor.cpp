@@ -27,6 +27,7 @@ void TempSensor::stop()
 
 void TempSensor::_temp_start()
 {
+	Serial.println("TPMS BASE START");
 	return;
 }
 
@@ -141,12 +142,15 @@ void TempSensorHttp::_temp_start()
 
 void TempSensorHttp::_temp_read(HttpClient& client, bool successful)
 {
+//	Serial.println("temp-read");
 	if (successful)
 	{
+//	Serial.println("tr-succes");
 		String response = client.getResponseString();
 		if (response.length() > 0)
 		{
-			StaticJsonBuffer<64> jsonBuffer;
+//		Serial.println("res>0");
+			StaticJsonBuffer<200> jsonBuffer;
 			JsonObject& root = jsonBuffer.parseObject(response);
 //			root.prettyPrintTo(Serial); //Uncomment it for debuging
 			if (root["temperature"].success())
