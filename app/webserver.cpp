@@ -38,20 +38,20 @@ void onConfiguration(HttpRequest &request, HttpResponse &response)
 
 				if (PrevStaEnable && ActiveConfig.StaEnable)
 				{
-					WifiStation.waitConnection(StaConnectOk, StaConnectTimeout, StaConnectFail);
+					WifiStation.enable(true);
+					WifiAccessPoint.enable(false);
 					WifiStation.config(ActiveConfig.StaSSID, ActiveConfig.StaPassword);
 				}
 				else if (ActiveConfig.StaEnable)
 				{
-					WifiStation.waitConnection(StaConnectOk, StaConnectTimeout, StaConnectFail);
-					WifiStation.enable(true);
+					WifiStation.enable(true, true);
+					WifiAccessPoint.enable(false, true);
 					WifiStation.config(ActiveConfig.StaSSID, ActiveConfig.StaPassword);
 				}
 				else
 				{
-					WifiStation.disconnect();
-					WifiAccessPoint.config("TyTherm", "20040229", AUTH_WPA2_PSK);
-					WifiAccessPoint.enable(true);
+					WifiStation.enable(false, true);
+					WifiAccessPoint.enable(true, true);
 				}
 			}
 		}

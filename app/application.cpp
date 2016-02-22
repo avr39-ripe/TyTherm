@@ -6,7 +6,29 @@ void counter_loop();
 unsigned long counter = 0;
 
 OneWire ds(onewire_pin);
-TempSensor tempSensor(ds);
+TempSensorOW tempSensor(ds, 4000);
+
+void STADisconnect(String ssid, uint8_t ssid_len, uint8_t bssid[6], uint8_t reason);
+void STAGotIP(IPAddress ip, IPAddress mask, IPAddress gateway);
+
+void initialAccessPointConfig()
+{
+	struct softap_config apconfig;
+
+	if(wifi_softap_get_config_default(&apconfig))
+	{
+		if (os_strncmp((const char *)apconfig.ssid, (const char *)"TyTherm", 32) != 0)
+		{
+			WifiAccessPoint.config("TyTherm", "20040229", AUTH_WPA2_PSK);
+			WifiStation.enable(true, true);
+			WifiAccessPoint.enable(false, true);
+		}
+		else
+			Serial.printf("AccessPoint already configured.\n");
+	}
+	else
+		Serial.println("AP NOT Started! - Get config failed!");
+}
 
 void init()
 {
@@ -19,18 +41,12 @@ void init()
 	system_update_cpu_freq(SYS_CPU_160MHZ);
 	wifi_set_sleep_type(NONE_SLEEP_T);
 
+	initialAccessPointConfig(); //One-time SOFTAP setup
+
 	ActiveConfig = loadConfig();
 
-	if (ActiveConfig.StaEnable)
-	{
-		WifiStation.waitConnection(StaConnectOk, StaConnectTimeout, StaConnectFail);
-		WifiStation.enable(true);
-		WifiStation.config(ActiveConfig.StaSSID, ActiveConfig.StaPassword);
-	}
-	else
-	{
-		WifiStation.enable(false);
-	}
+	WifiEvents.onStationDisconnect(STADisconnect);
+	WifiEvents.onStationGotIP(STAGotIP);
 
 	startWebServer();
 
@@ -46,16 +62,28 @@ void counter_loop()
 	counter++;
 }
 
-void StaConnectOk()
+void STADisconnect(String ssid, uint8_t ssid_len, uint8_t bssid[6], uint8_t reason)
 {
-	Serial.println("connected to AP");
-	WifiAccessPoint.enable(false);
+	Serial.printf("DELEGATE DISCONNECT - SSID: %s, REASON: %d\n", ssid.c_str(), reason);
+
+	if (!WifiAccessPoint.isEnabled())
+	{
+		Serial.println("Starting OWN AP DELEGATE");
+		WifiStation.disconnect();
+		WifiAccessPoint.enable(true);
+		WifiStation.connect();
+	}
 }
 
-void StaConnectFail()
+void STAGotIP(IPAddress ip, IPAddress mask, IPAddress gateway)
 {
-	Serial.println("connection FAILED");
-	WifiStation.disconnect();
-	WifiAccessPoint.config("TyTherm", "20040229", AUTH_WPA2_PSK);
-	WifiAccessPoint.enable(true);
+	Serial.printf("DELEGATE GOTIP - IP: %s, MASK: %s, GW: %s\n", ip.toString().c_str(),
+																mask.toString().c_str(),
+																gateway.toString().c_str());
+
+	if (WifiAccessPoint.isEnabled())
+	{
+		WifiAccessPoint.enable(false);
+	}
+
 }
