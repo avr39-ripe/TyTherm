@@ -13,6 +13,7 @@ TempSensor::TempSensor(uint16_t refresh)
 {
 	_refresh = refresh;
 	_temperature = 0;
+	_healthy = 0;
 }
 
 void TempSensor::start()
@@ -85,11 +86,29 @@ void TempSensorOW::_temp_read()
 	for (uint8_t i = 0; i < 9; i++)
 	{
 		_temp_data[i] = _ds->read();
+//		Serial.printf("SP[%d]: %d", i, _temp_data[i]);
+	}
+//	Serial.println();
+
+	// Here we filter error, when NO DS18B20 actually connected
+	// According to DS18B20 datasheet scratchpad[5] == 0xFF and scratchpad[7] == 0x10
+	// At startup or when no GND connected scratchpad[0] == 0x50 and scratchpad[1] == 0x05
+	// It is not often temperature is 85.000 degree so we FILTER OUT precise 85.000 readings
+	if ((_temp_data[5] != 0xFF || _temp_data[7] != 0x10) || (_temp_data[0] == 0x50 && _temp_data[1] == 0x05))
+	{
+//		Serial.println("no DS18B20 device present!");
+		_healthy = 0; // current value of _temperature CAN be bad, unhealthy!
+		_temp_counter = 0;
+		_temp_accum = 0;
+		_temp_readTimer.stop();
+		_temp_start();
+		return;
 	}
 
 	if (OneWire::crc8(_temp_data, 8) != _temp_data[8])
 	{
 //		Serial.println("DS18B20 temp crc error!");
+		_healthy = 0; // current value of _temperature CAN be bad, unhealthy!
 		_temp_counter = 0;
 		_temp_accum = 0;
 		_temp_readTimer.stop();
@@ -113,6 +132,7 @@ void TempSensorOW::_temp_read()
 	}
 	else
 	{
+		_healthy = 1; // current value of _temperature is GOOD, healthy
 		_temperature = _temp_accum / _tries;
 		_temp_counter = 0;
 		_temp_accum = 0;
@@ -146,6 +166,7 @@ void TempSensorHttp::_temp_read(HttpClient& client, bool successful)
 	if (successful)
 	{
 //	Serial.println("tr-succes");
+		_connectionStatus = TempsensorConnectionStatus::CONNECTED;
 		String response = client.getResponseString();
 		if (response.length() > 0)
 		{
@@ -156,7 +177,13 @@ void TempSensorHttp::_temp_read(HttpClient& client, bool successful)
 			if (root["temperature"].success())
 			{
 				_temperature = root["temperature"];
+				_healthy = root["healthy"];
 			}
 		}
+	}
+	else
+	{
+		_connectionStatus = TempsensorConnectionStatus::DISCONNECTED;
+		_healthy = 0;
 	}
 }

@@ -3,6 +3,12 @@
 #include <SmingCore/SmingCore.h>
 #include <Libraries/OneWire/OneWire.h>
 
+namespace TempsensorConnectionStatus
+{
+	const uint8_t CONNECTED = 1;
+	const uint8_t DISCONNECTED = 0;
+}
+
 class TempSensor
 {
 public:
@@ -11,9 +17,11 @@ public:
 	void start();
 	void stop();
 	float getTemp() { return _temperature; };
+	uint8_t isHealthy() { return _healthy; };
 protected:
 	float _temperature;
 	uint16_t _refresh;
+	uint8_t _healthy; // is tempsensor value good, correct, healthy, 1 - yes, 0 - no;
 	Timer _refreshTimer;
 	virtual void _temp_start();
 };
@@ -44,6 +52,7 @@ private:
 	void _temp_read(HttpClient& client, bool successful);
 	HttpClient _httpClient;
 	String _url;
+	uint8_t _connectionStatus; // Tempsensor connection status
 };
 
 
