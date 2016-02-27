@@ -11,23 +11,30 @@ TempSensorOW tempSensor(ds, 4000);
 void STADisconnect(String ssid, uint8_t ssid_len, uint8_t bssid[6], uint8_t reason);
 void STAGotIP(IPAddress ip, IPAddress mask, IPAddress gateway);
 
-void initialAccessPointConfig()
+void initialWifiConfig()
 {
 	struct softap_config apconfig;
-
 	if(wifi_softap_get_config_default(&apconfig))
 	{
 		if (os_strncmp((const char *)apconfig.ssid, (const char *)"TyTherm", 32) != 0)
 		{
 			WifiAccessPoint.config("TyTherm", "20040229", AUTH_WPA2_PSK);
-			WifiStation.enable(true, true);
-			WifiAccessPoint.enable(false, true);
+
 		}
 		else
 			Serial.printf("AccessPoint already configured.\n");
 	}
 	else
 		Serial.println("AP NOT Started! - Get config failed!");
+
+	if (WifiStation.getSSID().length() == 0)
+	{
+		WifiStation.config(WIFI_SSID, WIFI_PWD);
+		WifiStation.enable(true, true);
+		WifiAccessPoint.enable(false, true);
+	}
+	else
+		Serial.printf("Station already configured.\n");
 }
 
 void init()
@@ -41,7 +48,7 @@ void init()
 	system_update_cpu_freq(SYS_CPU_160MHZ);
 	wifi_set_sleep_type(NONE_SLEEP_T);
 
-	initialAccessPointConfig(); //One-time SOFTAP setup
+	initialWifiConfig(); //One-time WIFI setup
 
 	ActiveConfig = loadConfig();
 
