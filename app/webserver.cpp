@@ -97,9 +97,14 @@ void onAJAXGetState(HttpRequest &request, HttpResponse &response)
 
 	json["counter"] = counter;
 	json["temperature"] = tempSensor.getTemp();
-	json["healthy"] = tempSensor.isHealthy();
+	json["healthy"] = tempSensor.isValid();
 
 	response.sendJsonObject(stream);
+}
+
+void onTemperatureJson(HttpRequest &request, HttpResponse &response)
+{
+	tempSensor.onHttpGet(request,response);
 }
 
 
@@ -112,6 +117,7 @@ void startWebServer()
 	server.addPath("/config", onConfiguration);
 	server.addPath("/config.json", onConfiguration_json);
 	server.addPath("/state", onAJAXGetState);
+	server.addPath("/temperature.json", onTemperatureJson);
 	server.setDefaultHandler(onFile);
 	serverStarted = true;
 

@@ -37,6 +37,11 @@ TempSensorsOW::TempSensorsOW(OneWire &ds, uint16_t refresh)
 	_ds = &ds;
 }
 
+void TempSensorsOW::addSensor()
+{
+	TempSensors::addSensor();
+}
+
 void TempSensorsOW::addSensor(uint8_t* address)
 {
 	TempSensors::addSensor();
@@ -65,12 +70,18 @@ void TempSensorsOW::_temp_start()
 
 void TempSensorsOW::_temp_read()
 {
-	for (uint8_t id=0; id < _addresses.count(); id++)
+	for (uint8_t id=0; id < _data.count(); id++)
 	{
 		uint8_t _temp_data[12];
 		_ds->reset();
-		_ds->select(_addresses[id]);
-	//	_ds->skip();
+		if (_addresses.count() > 0)
+		{
+			_ds->select(_addresses[id]);
+		}
+		else
+		{
+			_ds->skip();
+		}
 		_ds->write(0xBE); // Read Scratchpad
 
 		for (uint8_t i = 0; i < 9; i++)
@@ -110,7 +121,33 @@ void TempSensorsOW::_temp_read()
 				_data[id]->_temperature = (float)(tempRead / 16.0);
 
 			_data[id]->_statusFlag = 0; // current value of _temperature is GOOD, healthy
+			Serial.printf("ID: %d - ", id); Serial.println(_data[id]->_temperature);
 		}
 	_temp_readTimer.stop();
 }
 
+void TempSensorsOW::onHttpGet(HttpRequest &request, HttpResponse &response)
+{
+	DynamicJsonBuffer jsonBuffer;
+	if (request.getRequestMethod() == RequestMethod::GET)
+	{
+		JsonObject& root = jsonBuffer.createObject();
+		for (uint8_t id=0; id < _data.count(); id++)
+		{
+//			JsonArray& sensorId = root.createNestedArray((String)id);
+//			JsonObject& data = sensorId.createNestedObject();
+//			data["temperature"] = _data[id]->_temperature;
+//			data["statusFlag"] = _data[id]->_statusFlag;
+//			sensorId.add(data);
+			JsonObject& data = root.createNestedObject((String)id);
+			data["temperature"] = _data[id]->_temperature;
+			data["statusFlag"] = _data[id]->_statusFlag;
+		}
+		String buf;
+		root.printTo(buf);
+
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setContentType(ContentType::JSON);
+		response.sendString(buf);
+	}
+}

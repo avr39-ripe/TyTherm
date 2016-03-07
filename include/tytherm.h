@@ -5,12 +5,13 @@
 #include <Libraries/OneWire/OneWire.h>
 
 #include "tempsensor.h"
+#include <tempsensors.h>
 
 //OneWire stuff
-const uint8_t onewire_pin = 2;
+const uint8_t onewire_pin = 4;
 extern OneWire ds;
 
-extern TempSensorOW tempSensor;
+extern TempSensorsOW tempSensor;
 
 extern unsigned long counter; // Kind of heartbeat counter
 

@@ -48,7 +48,9 @@ class TempSensorsOW : public TempSensors
 public:
 	TempSensorsOW(OneWire &ds, uint16_t refresh = 4000);
 	virtual ~TempSensorsOW() {};
+	void addSensor();
 	void addSensor(uint8_t* address);
+	void onHttpGet(HttpRequest &request, HttpResponse &response);
 private:
 	virtual void _temp_start();
 	void _temp_read();

@@ -5,8 +5,11 @@ Timer counterTimer;
 void counter_loop();
 unsigned long counter = 0;
 
+uint8_t sensorsAddr[][8] = {{0x28, 0x9D, 0x14, 0x3E, 0x00, 0x00, 0x00, 0xDB},
+							{0x28, 0xE3, 0x1D, 0x3E, 0x00, 0x00, 0x00, 0xA3},
+							{0x28, 0x97, 0xDD, 0x3D, 0x00, 0x00, 0x00, 0x4D}};
 OneWire ds(onewire_pin);
-TempSensorOW tempSensor(ds, 4000);
+TempSensorsOW tempSensor(ds, 4000);
 
 void STADisconnect(String ssid, uint8_t ssid_len, uint8_t bssid[6], uint8_t reason);
 void STAGotIP(IPAddress ip, IPAddress mask, IPAddress gateway);
@@ -60,6 +63,10 @@ void init()
 	counterTimer.initializeMs(1000, counter_loop).start();
 
 	ds.begin();
+//	tempSensor.addSensor();
+	tempSensor.addSensor(sensorsAddr[0]);
+	tempSensor.addSensor(sensorsAddr[1]);
+	tempSensor.addSensor(sensorsAddr[2]);
 	tempSensor.start();
 
 }
