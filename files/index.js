@@ -97,10 +97,8 @@ function initTemperature() {
 //Here we put some initial code which starts after DOM loaded
 function onDocumentRedy() {
 	//Init
-	
 	initTemperature();
 	updateState();
-	
 	setInterval(updateState, 5000);
 
 }
