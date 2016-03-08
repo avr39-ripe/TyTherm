@@ -58,4 +58,20 @@ private:
 	OneWire *_ds;
 	Timer _temp_readTimer;
 };
+
+class TempSensorsHttp : public TempSensor
+{
+public:
+	TempSensorsHttp(uint16_t refresh = 4000);
+	virtual ~TempSensorsHttp() {};
+	void addSensor();
+	void addSensor(String url);
+	void onHttpGet(HttpRequest &request, HttpResponse &response);
+private:
+	virtual void _temp_start();
+	void _temp_read(HttpClient& client, bool successful);
+	HttpClient _httpClient;
+	Vector<String> _addresses;
+	uint8_t _currentUrlId;
+};
 #endif /* LIB_TEMPSENSOR_TEMPSENSORS_H_ */

@@ -134,11 +134,6 @@ void TempSensorsOW::onHttpGet(HttpRequest &request, HttpResponse &response)
 		JsonObject& root = jsonBuffer.createObject();
 		for (uint8_t id=0; id < _data.count(); id++)
 		{
-//			JsonArray& sensorId = root.createNestedArray((String)id);
-//			JsonObject& data = sensorId.createNestedObject();
-//			data["temperature"] = _data[id]->_temperature;
-//			data["statusFlag"] = _data[id]->_statusFlag;
-//			sensorId.add(data);
 			JsonObject& data = root.createNestedObject((String)id);
 			data["temperature"] = _data[id]->_temperature;
 			data["statusFlag"] = _data[id]->_statusFlag;
@@ -149,5 +144,49 @@ void TempSensorsOW::onHttpGet(HttpRequest &request, HttpResponse &response)
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setContentType(ContentType::JSON);
 		response.sendString(buf);
+	}
+}
+
+//TempSensorsHttp
+TempSensorsHttp::TempSensorsHttp(String url, uint16_t refresh)
+:TempSensor(refresh)
+{
+	_currentUrlId = 0;
+}
+
+void TempSensorsHttp::_temp_start()
+{
+	if (_httpClient.isProcessing())
+		return; // We need to wait while request processing was completed
+	else
+		_httpClient.downloadString(_url, HttpClientCompletedDelegate(&TempSensorHttp::_temp_read, this));
+
+}
+
+void TempSensorsHttp::_temp_read(HttpClient& client, bool successful)
+{
+//	Serial.println("temp-read");
+	if (successful)
+	{
+//	Serial.println("tr-succes");
+		_connectionStatus = TempsensorConnectionStatus::CONNECTED;
+		String response = client.getResponseString();
+		if (response.length() > 0)
+		{
+//		Serial.println("res>0");
+			StaticJsonBuffer<200> jsonBuffer;
+			JsonObject& root = jsonBuffer.parseObject(response);
+//			root.prettyPrintTo(Serial); //Uncomment it for debuging
+			if (root["temperature"].success())
+			{
+				_temperature = root["temperature"];
+				_healthy = root["healthy"];
+			}
+		}
+	}
+	else
+	{
+		_connectionStatus = TempsensorConnectionStatus::DISCONNECTED;
+		_healthy = 0;
 	}
 }
