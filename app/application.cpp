@@ -9,7 +9,7 @@ uint8_t sensorsAddr[][8] = {{0x28, 0x9D, 0x14, 0x3E, 0x00, 0x00, 0x00, 0xDB},
 							{0x28, 0xE3, 0x1D, 0x3E, 0x00, 0x00, 0x00, 0xA3},
 							{0x28, 0x97, 0xDD, 0x3D, 0x00, 0x00, 0x00, 0x4D}};
 OneWire ds(onewire_pin);
-TempSensorsOW tempSensor(ds, 4000);
+TempSensorsHttp tempSensor(4000);
 
 void STADisconnect(String ssid, uint8_t ssid_len, uint8_t bssid[6], uint8_t reason);
 void STAGotIP(IPAddress ip, IPAddress mask, IPAddress gateway);
@@ -44,7 +44,7 @@ void init()
 {
 	spiffs_mount(); // Mount file system, in order to work with files
 	Serial.begin(SERIAL_BAUD_RATE); // 115200 by default
-	Serial.systemDebugOutput(false);
+	Serial.systemDebugOutput(true);
 	Serial.commandProcessing(false);
 
 	//SET higher CPU freq & disable wifi sleep
@@ -62,12 +62,12 @@ void init()
 
 	counterTimer.initializeMs(1000, counter_loop).start();
 
-	ds.begin();
+
 //	tempSensor.addSensor();
-	tempSensor.addSensor(sensorsAddr[0]);
-	tempSensor.addSensor(sensorsAddr[1]);
-	tempSensor.addSensor(sensorsAddr[2]);
-	tempSensor.start();
+	tempSensor.addSensor("http://10.2.113.122/temperature.json?sensor=0");
+	tempSensor.addSensor("http://10.2.113.122/temperature.json?sensor=1");
+	tempSensor.addSensor("http://10.2.113.122/temperature.json?sensor=2");
+
 
 }
 
@@ -99,5 +99,5 @@ void STAGotIP(IPAddress ip, IPAddress mask, IPAddress gateway)
 	{
 		WifiAccessPoint.enable(false);
 	}
-
+	tempSensor.start();
 }

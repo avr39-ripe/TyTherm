@@ -175,19 +175,37 @@ TempSensorsHttp::TempSensorsHttp(uint16_t refresh)
 	_currentSensorId = 0;
 }
 
+void TempSensorsHttp::addSensor()
+{
+	TempSensors::addSensor();
+}
+
+void TempSensorsHttp::addSensor(String url)
+{
+	TempSensors::addSensor();
+	_addresses.add(url);
+}
 //void TempSensorsHttp::start()
 //{
 //	_refreshTimer.initializeMs(_refresh, TimerDelegate(&TempSensors::_temp_start, this)).start(false);
 //}
 void TempSensorsHttp::_getHttpTemp(uint8_t sensorId)
 {
-	if (_httpClient.isProcessing())
+	if (_httpClient->isProcessing())
 	{
 		return; // We need to wait while request processing was completed
 	}
 	else
 	{
-		_httpClient.downloadString(_addresses[_currentSensorId], HttpClientCompletedDelegate(&TempSensorsHttp::_temp_read, this));
+		if (_httpClient !=nullptr)
+		{
+			delete _httpClient;
+		}
+		else
+		{
+		_httpClient = new HttpClient();
+		}
+		_httpClient->downloadString(_addresses[_currentSensorId], HttpClientCompletedDelegate(&TempSensorsHttp::_temp_read, this));
 	}
 
 }
@@ -206,29 +224,31 @@ void TempSensorsHttp::_temp_start()
 
 void TempSensorsHttp::_temp_read(HttpClient& client, bool successful)
 {
-//	Serial.println("temp-read");
+	Serial.println("temp-read");
 	if (successful)
 	{
-//	Serial.println("tr-succes");
+	Serial.println("tr-succes");
 		String response = client.getResponseString();
 		if (response.length() > 0)
 		{
-//		Serial.println("res>0");
+		Serial.println("res>0");
 			StaticJsonBuffer<200> jsonBuffer;
 			JsonObject& root = jsonBuffer.parseObject(response);
-//			root.prettyPrintTo(Serial); //Uncomment it for debuging
+			root.prettyPrintTo(Serial); //Uncomment it for debuging
 			if (root["temperature"].success())
 			{
 				_data[_currentSensorId]->_temperature = root["temperature"];
 				_data[_currentSensorId]->_statusFlag = root["statusFlag"];
 			}
+			Serial.printf("ID: %d - ", _currentSensorId); Serial.println(_data[_currentSensorId]->_temperature);
 		}
 	}
 	else
 	{
 		_data[_currentSensorId]->_statusFlag = (TempSensorStatus::DISCONNECTED | TempSensorStatus::INVALID);
+		Serial.printf("NET PROBLEM unsucces request\n");
 	}
-	if (_currentSensorId < _data.count())
+	if (_currentSensorId < _data.count()-1)
 	{
 		Serial.printf("Read next sensor: %d\n", _currentSensorId + 1);
 		_getHttpTemp(_currentSensorId++);

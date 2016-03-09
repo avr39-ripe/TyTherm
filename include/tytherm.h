@@ -11,7 +11,7 @@
 const uint8_t onewire_pin = 4;
 extern OneWire ds;
 
-extern TempSensorsOW tempSensor;
+extern TempSensorsHttp tempSensor;
 
 extern unsigned long counter; // Kind of heartbeat counter
 
