@@ -191,21 +191,14 @@ void TempSensorsHttp::addSensor(String url)
 //}
 void TempSensorsHttp::_getHttpTemp(uint8_t sensorId)
 {
-	if (_httpClient->isProcessing())
+	if (_httpClient.isProcessing())
 	{
 		return; // We need to wait while request processing was completed
 	}
 	else
 	{
-		if (_httpClient !=nullptr)
-		{
-			delete _httpClient;
-		}
-		else
-		{
-		_httpClient = new HttpClient();
-		}
-		_httpClient->downloadString(_addresses[_currentSensorId], HttpClientCompletedDelegate(&TempSensorsHttp::_temp_read, this));
+
+		_httpClient.downloadString(_addresses[_currentSensorId], HttpClientCompletedDelegate(&TempSensorsHttp::_temp_read, this));
 	}
 
 }

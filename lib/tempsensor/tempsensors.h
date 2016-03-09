@@ -72,7 +72,7 @@ private:
 	virtual void _temp_start();
 	void _temp_read(HttpClient& client, bool successful);
 	void _getHttpTemp(uint8_t sensorId);
-	HttpClient* _httpClient;
+	HttpClient _httpClient;
 	Vector<String> _addresses;
 	uint8_t _currentSensorId;
 };
