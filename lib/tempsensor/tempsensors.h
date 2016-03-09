@@ -71,9 +71,11 @@ public:
 private:
 	virtual void _temp_start();
 	void _temp_read(HttpClient& client, bool successful);
-	void _getHttpTemp(uint8_t sensorId);
+	//void _getHttpTemp(uint8_t sensorId);
+	void _getHttpTemp();
 	HttpClient _httpClient;
 	Vector<String> _addresses;
 	uint8_t _currentSensorId;
+	Timer _httpTimer;
 };
 #endif /* LIB_TEMPSENSOR_TEMPSENSORS_H_ */

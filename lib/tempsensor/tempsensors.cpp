@@ -189,7 +189,7 @@ void TempSensorsHttp::addSensor(String url)
 //{
 //	_refreshTimer.initializeMs(_refresh, TimerDelegate(&TempSensors::_temp_start, this)).start(false);
 //}
-void TempSensorsHttp::_getHttpTemp(uint8_t sensorId)
+void TempSensorsHttp::_getHttpTemp()
 {
 	if (_httpClient.isProcessing())
 	{
@@ -197,7 +197,7 @@ void TempSensorsHttp::_getHttpTemp(uint8_t sensorId)
 	}
 	else
 	{
-
+		_httpClient.reset();
 		_httpClient.downloadString(_addresses[_currentSensorId], HttpClientCompletedDelegate(&TempSensorsHttp::_temp_read, this));
 	}
 
@@ -206,7 +206,7 @@ void TempSensorsHttp::_temp_start()
 {
 	if (_currentSensorId == 0)
 	{
-		_getHttpTemp(_currentSensorId);
+		_getHttpTemp();
 	}
 	else
 	{
@@ -244,7 +244,9 @@ void TempSensorsHttp::_temp_read(HttpClient& client, bool successful)
 	if (_currentSensorId < _data.count()-1)
 	{
 		Serial.printf("Read next sensor: %d\n", _currentSensorId + 1);
-		_getHttpTemp(_currentSensorId++);
+		_currentSensorId++;
+		_httpTimer.initializeMs(500, TimerDelegate(&TempSensorsHttp::_getHttpTemp, this)).start(false);
+//		_getHttpTemp(_currentSensorId++);
 	}
 	else
 	{
