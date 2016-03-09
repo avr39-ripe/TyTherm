@@ -36,6 +36,7 @@ public:
 	uint8_t isValid() { return isValid(0); }
 	uint8_t isConnected(uint8_t sensorId) { return (_data[sensorId]->_statusFlag & TempSensorStatus::DISCONNECTED) ? 0 : 1;};
 	uint8_t isConnected() { return isConnected(0); };
+	void onHttpGet(HttpRequest &request, HttpResponse &response);
 protected:
 	Vector<sensorData*> _data;
 	uint16_t _refresh;
@@ -50,7 +51,6 @@ public:
 	virtual ~TempSensorsOW() {};
 	void addSensor();
 	void addSensor(uint8_t* address);
-	void onHttpGet(HttpRequest &request, HttpResponse &response);
 private:
 	virtual void _temp_start();
 	void _temp_read();
@@ -64,14 +64,12 @@ class TempSensorsHttp : public TempSensors
 public:
 	TempSensorsHttp(uint16_t refresh = 4000);
 	virtual ~TempSensorsHttp() {};
-//	void start();
 	void addSensor();
 	void addSensor(String url);
-	void onHttpGet(HttpRequest &request, HttpResponse &response);
+
 private:
 	virtual void _temp_start();
 	void _temp_read(HttpClient& client, bool successful);
-	//void _getHttpTemp(uint8_t sensorId);
 	void _getHttpTemp();
 	HttpClient _httpClient;
 	Vector<String> _addresses;

@@ -29,6 +29,41 @@ void TempSensors::addSensor()
 	_data.add(newSensorData);
 }
 
+void TempSensors::onHttpGet(HttpRequest &request, HttpResponse &response)
+{
+	if (request.getRequestMethod() == RequestMethod::GET)
+	{
+		DynamicJsonBuffer jsonBuffer;
+		String buf;
+		JsonObject& root = jsonBuffer.createObject();
+		String queryParam = request.getQueryParameter("sensor", "-1");
+		if (queryParam == "-1")
+		{
+			for (uint8_t id=0; id < _data.count(); id++)
+			{
+				JsonObject& data = root.createNestedObject((String)id);
+				data["temperature"] = _data[id]->_temperature;
+				data["statusFlag"] = _data[id]->_statusFlag;
+			}
+		}
+		else
+		{
+			uint8_t id = request.getQueryParameter("sensor").toInt();
+			if (id >= 0 && id < _data.count())
+			{
+				root["temperature"] = _data[id]->_temperature;
+				root["statusFlag"] = _data[id]->_statusFlag;
+			}
+		}
+
+		root.printTo(buf);
+
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setContentType(ContentType::JSON);
+		response.sendString(buf);
+	}
+}
+
 //TempSensorsOW
 TempSensorsOW::TempSensorsOW(OneWire &ds, uint16_t refresh)
 :TempSensors(refresh)
@@ -126,48 +161,6 @@ void TempSensorsOW::_temp_read()
 	_temp_readTimer.stop();
 }
 
-void TempSensorsOW::onHttpGet(HttpRequest &request, HttpResponse &response)
-{
-	if (request.getRequestMethod() == RequestMethod::GET)
-	{
-		DynamicJsonBuffer jsonBuffer;
-		String buf;
-		JsonObject& root = jsonBuffer.createObject();
-		String queryParam = request.getQueryParameter("sensor", "-1");
-//		Serial.printf("QueryParameter %s\n", queryParam.c_str());
-		if (queryParam == "-1")
-		{
-//			Serial.printf("MultiSensor\n");
-			for (uint8_t id=0; id < _data.count(); id++)
-			{
-				JsonObject& data = root.createNestedObject((String)id);
-				data["temperature"] = _data[id]->_temperature;
-				data["statusFlag"] = _data[id]->_statusFlag;
-			}
-		}
-		else
-		{
-//			Serial.printf("SingleSensor\n");
-			uint8_t id = request.getQueryParameter("sensor").toInt();
-			if (id >= 0 && id < _data.count())
-			{
-				root["temperature"] = _data[id]->_temperature;
-				root["statusFlag"] = _data[id]->_statusFlag;
-			}
-//			else
-//			{
-//				Serial.printf("Out of Range!\n");
-//			}
-		}
-
-		root.printTo(buf);
-
-		response.setHeader("Access-Control-Allow-Origin", "*");
-		response.setContentType(ContentType::JSON);
-		response.sendString(buf);
-	}
-}
-
 //TempSensorsHttp
 TempSensorsHttp::TempSensorsHttp(uint16_t refresh)
 :TempSensors(refresh)
@@ -185,10 +178,7 @@ void TempSensorsHttp::addSensor(String url)
 	TempSensors::addSensor();
 	_addresses.add(url);
 }
-//void TempSensorsHttp::start()
-//{
-//	_refreshTimer.initializeMs(_refresh, TimerDelegate(&TempSensors::_temp_start, this)).start(false);
-//}
+
 void TempSensorsHttp::_getHttpTemp()
 {
 	if (_httpClient.isProcessing())
@@ -252,47 +242,5 @@ void TempSensorsHttp::_temp_read(HttpClient& client, bool successful)
 	{
 		Serial.printf("Last sensor! Wait for timer event!\n");
 		_currentSensorId = 0;
-	}
-}
-
-void TempSensorsHttp::onHttpGet(HttpRequest &request, HttpResponse &response)
-{
-	if (request.getRequestMethod() == RequestMethod::GET)
-	{
-		DynamicJsonBuffer jsonBuffer;
-		String buf;
-		JsonObject& root = jsonBuffer.createObject();
-		String queryParam = request.getQueryParameter("sensor", "-1");
-//		Serial.printf("QueryParameter %s\n", queryParam.c_str());
-		if (queryParam == "-1")
-		{
-//			Serial.printf("MultiSensor\n");
-			for (uint8_t id=0; id < _data.count(); id++)
-			{
-				JsonObject& data = root.createNestedObject((String)id);
-				data["temperature"] = _data[id]->_temperature;
-				data["statusFlag"] = _data[id]->_statusFlag;
-			}
-		}
-		else
-		{
-//			Serial.printf("SingleSensor\n");
-			uint8_t id = request.getQueryParameter("sensor").toInt();
-			if (id >= 0 && id < _data.count())
-			{
-				root["temperature"] = _data[id]->_temperature;
-				root["statusFlag"] = _data[id]->_statusFlag;
-			}
-//			else
-//			{
-//				Serial.printf("Out of Range!\n");
-//			}
-		}
-
-		root.printTo(buf);
-
-		response.setHeader("Access-Control-Allow-Origin", "*");
-		response.setContentType(ContentType::JSON);
-		response.sendString(buf);
 	}
 }
