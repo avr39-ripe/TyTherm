@@ -9,7 +9,7 @@ uint8_t sensorsAddr[][8] = {{0x28, 0x9D, 0x14, 0x3E, 0x00, 0x00, 0x00, 0xDB},
 							{0x28, 0xE3, 0x1D, 0x3E, 0x00, 0x00, 0x00, 0xA3},
 							{0x28, 0x97, 0xDD, 0x3D, 0x00, 0x00, 0x00, 0x4D}};
 OneWire ds(onewire_pin);
-TempSensorsHttp tempSensor(8000);
+TempSensorsHttp tempSensor(4000);
 
 void STADisconnect(String ssid, uint8_t ssid_len, uint8_t bssid[6], uint8_t reason);
 void STAGotIP(IPAddress ip, IPAddress mask, IPAddress gateway);
@@ -44,7 +44,7 @@ void init()
 {
 	spiffs_mount(); // Mount file system, in order to work with files
 	Serial.begin(SERIAL_BAUD_RATE); // 115200 by default
-	Serial.systemDebugOutput(true);
+	Serial.systemDebugOutput(false);
 	Serial.commandProcessing(false);
 
 	//SET higher CPU freq & disable wifi sleep
