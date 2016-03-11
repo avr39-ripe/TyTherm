@@ -29,6 +29,41 @@ void TempSensors::addSensor()
 	_data.add(newSensorData);
 }
 
+void TempSensors::onHttpGet(HttpRequest &request, HttpResponse &response)
+{
+	if (request.getRequestMethod() == RequestMethod::GET)
+	{
+		DynamicJsonBuffer jsonBuffer;
+		String buf;
+		JsonObject& root = jsonBuffer.createObject();
+		String queryParam = request.getQueryParameter("sensor", "-1");
+		if (queryParam == "-1")
+		{
+			for (uint8_t id=0; id < _data.count(); id++)
+			{
+				JsonObject& data = root.createNestedObject((String)id);
+				data["temperature"] = _data[id]->_temperature;
+				data["statusFlag"] = _data[id]->_statusFlag;
+			}
+		}
+		else
+		{
+			uint8_t id = request.getQueryParameter("sensor").toInt();
+			if (id >= 0 && id < _data.count())
+			{
+				root["temperature"] = _data[id]->_temperature;
+				root["statusFlag"] = _data[id]->_statusFlag;
+			}
+		}
+
+		root.printTo(buf);
+
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setContentType(ContentType::JSON);
+		response.sendString(buf);
+	}
+}
+
 //TempSensorsOW
 TempSensorsOW::TempSensorsOW(OneWire &ds, uint16_t refresh)
 :TempSensors(refresh)
@@ -45,7 +80,59 @@ void TempSensorsOW::addSensor()
 void TempSensorsOW::addSensor(uint8_t* address)
 {
 	TempSensors::addSensor();
-	_addresses.add(address);
+	uint8_t* sensorAddr = new uint8_t[8]; //Reserve memory for class-copy of addres
+	if (address == nullptr)
+	{ return; }
+	else
+	{ os_memcpy(sensorAddr, address, 8); }
+	_addresses.add(sensorAddr);
+	Serial.printf("_addr count,%d\n",_addresses.count());
+}
+
+void TempSensorsOW::addSensor(String address)
+{
+	TempSensors::addSensor();
+	uint8_t* sensorAddr = new uint8_t[8]; //Reserve memory for class-copy of addres
+	os_memset(sensorAddr, 0, 8);
+
+	auto strLength = address.length();
+	if (strLength != 16 ) //address must be 8 byte value in hex format with 2 digits per byte so length must be exactly 16
+	{ Serial.printf("BAD ADDR STR!\n"); return; }
+	else
+	{
+		for (uint8_t index = 0; index < strLength; index++)
+		{
+			uint8_t c = address[index];
+			Serial.printf("address[%d]=%c = ",index,c);
+			uint8_t value = 0;
+			if(c >= '0' && c <= '9')
+			{
+				value = (c - '0');
+			}
+			else if (c >= 'A' && c <= 'F')
+			{
+				value = (10 + (c - 'A'));
+			}
+			else if (c >= 'a' && c <= 'f')
+			{
+				 value = (10 + (c - 'a'));
+			}
+			else
+			{
+				return;
+			}
+			Serial.printf("%d\n",value);
+			sensorAddr[(index/2)] += value << (((index + 1) % 2) * 4);
+		}
+		Serial.printf("StrAddress: ");
+		for (uint8_t i = 0; i<8; i++)
+		{
+			Serial.printf("%X ", sensorAddr[i]);
+		}
+		Serial.println("StrAddressEND");
+		_addresses.add(sensorAddr);
+		Serial.printf("_addr count,%d\n",_addresses.count());
+	}
 }
 
 void TempSensorsOW::_temp_start()
@@ -126,48 +213,6 @@ void TempSensorsOW::_temp_read()
 	_temp_readTimer.stop();
 }
 
-void TempSensorsOW::onHttpGet(HttpRequest &request, HttpResponse &response)
-{
-	if (request.getRequestMethod() == RequestMethod::GET)
-	{
-		DynamicJsonBuffer jsonBuffer;
-		String buf;
-		JsonObject& root = jsonBuffer.createObject();
-		String queryParam = request.getQueryParameter("sensor", "-1");
-//		Serial.printf("QueryParameter %s\n", queryParam.c_str());
-		if (queryParam == "-1")
-		{
-//			Serial.printf("MultiSensor\n");
-			for (uint8_t id=0; id < _data.count(); id++)
-			{
-				JsonObject& data = root.createNestedObject((String)id);
-				data["temperature"] = _data[id]->_temperature;
-				data["statusFlag"] = _data[id]->_statusFlag;
-			}
-		}
-		else
-		{
-//			Serial.printf("SingleSensor\n");
-			uint8_t id = request.getQueryParameter("sensor").toInt();
-			if (id >= 0 && id < _data.count())
-			{
-				root["temperature"] = _data[id]->_temperature;
-				root["statusFlag"] = _data[id]->_statusFlag;
-			}
-//			else
-//			{
-//				Serial.printf("Out of Range!\n");
-//			}
-		}
-
-		root.printTo(buf);
-
-		response.setHeader("Access-Control-Allow-Origin", "*");
-		response.setContentType(ContentType::JSON);
-		response.sendString(buf);
-	}
-}
-
 //TempSensorsHttp
 TempSensorsHttp::TempSensorsHttp(uint16_t refresh)
 :TempSensors(refresh)
@@ -175,11 +220,18 @@ TempSensorsHttp::TempSensorsHttp(uint16_t refresh)
 	_currentSensorId = 0;
 }
 
-//void TempSensorsHttp::start()
-//{
-//	_refreshTimer.initializeMs(_refresh, TimerDelegate(&TempSensors::_temp_start, this)).start(false);
-//}
-void TempSensorsHttp::_getHttpTemp(uint8_t sensorId)
+void TempSensorsHttp::addSensor()
+{
+	TempSensors::addSensor();
+}
+
+void TempSensorsHttp::addSensor(String url)
+{
+	TempSensors::addSensor();
+	_addresses.add(url);
+}
+
+void TempSensorsHttp::_getHttpTemp()
 {
 	if (_httpClient.isProcessing())
 	{
@@ -187,6 +239,7 @@ void TempSensorsHttp::_getHttpTemp(uint8_t sensorId)
 	}
 	else
 	{
+		_httpClient.reset();
 		_httpClient.downloadString(_addresses[_currentSensorId], HttpClientCompletedDelegate(&TempSensorsHttp::_temp_read, this));
 	}
 
@@ -195,7 +248,7 @@ void TempSensorsHttp::_temp_start()
 {
 	if (_currentSensorId == 0)
 	{
-		_getHttpTemp(_currentSensorId);
+		_getHttpTemp();
 	}
 	else
 	{
@@ -222,62 +275,24 @@ void TempSensorsHttp::_temp_read(HttpClient& client, bool successful)
 				_data[_currentSensorId]->_temperature = root["temperature"];
 				_data[_currentSensorId]->_statusFlag = root["statusFlag"];
 			}
+			Serial.printf("ID: %d - ", _currentSensorId); Serial.println(_data[_currentSensorId]->_temperature);
 		}
 	}
 	else
 	{
 		_data[_currentSensorId]->_statusFlag = (TempSensorStatus::DISCONNECTED | TempSensorStatus::INVALID);
+		Serial.printf("NET PROBLEM unsucces request\n");
 	}
-	if (_currentSensorId < _data.count())
+	if (_currentSensorId < _data.count()-1)
 	{
 		Serial.printf("Read next sensor: %d\n", _currentSensorId + 1);
-		_getHttpTemp(_currentSensorId++);
+		_currentSensorId++;
+		_httpTimer.initializeMs(100, TimerDelegate(&TempSensorsHttp::_getHttpTemp, this)).start(false);
+//		_getHttpTemp(_currentSensorId++);
 	}
 	else
 	{
 		Serial.printf("Last sensor! Wait for timer event!\n");
 		_currentSensorId = 0;
-	}
-}
-
-void TempSensorsHttp::onHttpGet(HttpRequest &request, HttpResponse &response)
-{
-	if (request.getRequestMethod() == RequestMethod::GET)
-	{
-		DynamicJsonBuffer jsonBuffer;
-		String buf;
-		JsonObject& root = jsonBuffer.createObject();
-		String queryParam = request.getQueryParameter("sensor", "-1");
-//		Serial.printf("QueryParameter %s\n", queryParam.c_str());
-		if (queryParam == "-1")
-		{
-//			Serial.printf("MultiSensor\n");
-			for (uint8_t id=0; id < _data.count(); id++)
-			{
-				JsonObject& data = root.createNestedObject((String)id);
-				data["temperature"] = _data[id]->_temperature;
-				data["statusFlag"] = _data[id]->_statusFlag;
-			}
-		}
-		else
-		{
-//			Serial.printf("SingleSensor\n");
-			uint8_t id = request.getQueryParameter("sensor").toInt();
-			if (id >= 0 && id < _data.count())
-			{
-				root["temperature"] = _data[id]->_temperature;
-				root["statusFlag"] = _data[id]->_statusFlag;
-			}
-//			else
-//			{
-//				Serial.printf("Out of Range!\n");
-//			}
-		}
-
-		root.printTo(buf);
-
-		response.setHeader("Access-Control-Allow-Origin", "*");
-		response.setContentType(ContentType::JSON);
-		response.sendString(buf);
 	}
 }
