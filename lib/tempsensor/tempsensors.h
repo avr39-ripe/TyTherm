@@ -55,6 +55,7 @@ public:
 private:
 	virtual void _temp_start();
 	void _temp_read();
+	void _hexStrToAddress(String addrStr, uint8_t* addrArray);
 	Vector<uint8_t*> _addresses;
 	OneWire *_ds;
 	Timer _temp_readTimer;
