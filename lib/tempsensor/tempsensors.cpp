@@ -86,7 +86,6 @@ void TempSensorsOW::addSensor(uint8_t* address)
 	else
 	{ os_memcpy(sensorAddr, address, 8); }
 	_addresses.add(sensorAddr);
-//	Serial.printf("_addr count,%d\n",_addresses.count());
 }
 
 void TempSensorsOW::addSensor(String address)
@@ -94,56 +93,25 @@ void TempSensorsOW::addSensor(String address)
 	TempSensors::addSensor();
 	uint8_t* sensorAddr = new uint8_t[8]; //Reserve memory for class-copy of addres
 	os_memset(sensorAddr, 0, 8);
+	_hexStrToAddress(address, sensorAddr);
 
-//	auto strLength = address.length();
-//	if (strLength != 16 ) //address must be 8 byte value in hex format with 2 digits per byte so length must be exactly 16
-//	{
-////		Serial.printf("BAD ADDR STR!\n");
-//		return;
-//	}
-//	else
-//	{
-//		for (uint8_t index = 0; index < strLength; index++)
-//		{
-//			uint8_t c = address[index];
-////			Serial.printf("address[%d]=%c = ",index,c);
-//			uint8_t value = 0;
-//			if(c >= '0' && c <= '9')
-//			{
-//				value = (c - '0');
-//			}
-//			else if (c >= 'A' && c <= 'F')
-//			{
-//				value = (10 + (c - 'A'));
-//			}
-//			else if (c >= 'a' && c <= 'f')
-//			{
-//				 value = (10 + (c - 'a'));
-//			}
-//			else
-//			{
-//				return;
-//			}
-////			Serial.printf("%d\n",value);
-//			sensorAddr[(index/2)] += value << (((index + 1) % 2) * 4);
-//		}
-//		Serial.printf("StrAddress: ");
-//		for (uint8_t i = 0; i<8; i++)
-//		{
-//			Serial.printf("%X \n", sensorAddr[i]);
-//		}
-//		Serial.println("StrAddressEND");
-		_hexStrToAddress(address, sensorAddr);
-		_addresses.add(sensorAddr);
-//		Serial.printf("_addr count,%d\n",_addresses.count());
-//	}
+	_addresses.add(sensorAddr);
 }
+void TempSensorsOW::modifySensor(uint8_t sensorId, String address)
+{
+	uint8_t* sensorAddr = new uint8_t[8]; //Reserve memory for class-copy of addres
+	os_memset(sensorAddr, 0, 8);
+	_hexStrToAddress(address, sensorAddr);
+
+	os_memcpy(_addresses[sensorId],sensorAddr, 8);
+	delete[] sensorAddr;
+}
+
 void TempSensorsOW::_hexStrToAddress(String addrStr, uint8_t* addrArray)
 {
 	auto strLength = addrStr.length();
 	if (strLength != 16 || addrArray == nullptr) //address must be 8 byte value in hex format with 2 digits per byte so length must be exactly 16
 	{
-//		Serial.printf("BAD ADDR STR!\n");
 		return;
 	}
 	else
@@ -151,7 +119,6 @@ void TempSensorsOW::_hexStrToAddress(String addrStr, uint8_t* addrArray)
 		for (uint8_t index = 0; index < strLength; index++)
 		{
 			uint8_t c = addrStr[index];
-//			Serial.printf("address[%d]=%c = ",index,c);
 			uint8_t value = 0;
 			if(c >= '0' && c <= '9')
 			{
@@ -169,17 +136,17 @@ void TempSensorsOW::_hexStrToAddress(String addrStr, uint8_t* addrArray)
 			{
 				return;
 			}
-//			Serial.printf("%d\n",value);
 			addrArray[(index/2)] += value << (((index + 1) % 2) * 4);
 		}
-		Serial.printf("StrAddress: ");
+		Serial.printf("OWADDR: ");
 		for (uint8_t i = 0; i<8; i++)
 		{
-			Serial.printf("%X ", addrArray[i]);
+			Serial.printf("%02X", addrArray[i]);
 		}
-		Serial.println("StrAddressEND");
+		Serial.println();
 	}
 }
+
 void TempSensorsOW::_temp_start()
 {
 	if (!_temp_readTimer.isStarted())

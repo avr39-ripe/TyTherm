@@ -52,6 +52,7 @@ public:
 	void addSensor();
 	void addSensor(uint8_t* address);
 	void addSensor(String address);
+	void modifySensor(uint8_t sensorId, String address);
 private:
 	virtual void _temp_start();
 	void _temp_read();
