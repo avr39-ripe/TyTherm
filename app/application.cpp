@@ -52,6 +52,7 @@ void init()
 	wifi_set_sleep_type(NONE_SLEEP_T);
 
 	initialWifiConfig(); //One-time WIFI setup
+	wifi_station_dhcpc_set_maxtry(128); //SET DHCP MAXTRY
 
 	ActiveConfig = loadConfig();
 
@@ -63,13 +64,13 @@ void init()
 	counterTimer.initializeMs(1000, counter_loop).start();
 
 	ds.begin();
-//	tempSensor.addSensor();
-	tempSensor.addSensor((String)"289D143E000000DB");
-//	tempSensor.addSensor((uint8_t *)(const uint8_t[]){0x28, 0x9D, 0x14, 0x3E, 0x00, 0x00, 0x00, 0xDB});
-	tempSensor.addSensor((String)"28E31D3E000000B4"); //Intendently ad address
-	tempSensor.modifySensor(1,"28E31D3E000000A3"); //modify it do good one
-//	tempSensor.addSensor((uint8_t *)(const uint8_t[]){0x28, 0xE3, 0x1D, 0x3E, 0x00, 0x00, 0x00, 0xA3});
-	tempSensor.addSensor((uint8_t *)(const uint8_t[]){0x28, 0x97, 0xDD, 0x3D, 0x00, 0x00, 0x00, 0x4D});
+	tempSensor.addSensor();
+//	tempSensor.addSensor((String)"289D143E000000DB");
+////	tempSensor.addSensor((uint8_t *)(const uint8_t[]){0x28, 0x9D, 0x14, 0x3E, 0x00, 0x00, 0x00, 0xDB});
+//	tempSensor.addSensor((String)"28E31D3E000000B4"); //Intendently ad address
+//	tempSensor.modifySensor(1,"28E31D3E000000A3"); //modify it do good one
+////	tempSensor.addSensor((uint8_t *)(const uint8_t[]){0x28, 0xE3, 0x1D, 0x3E, 0x00, 0x00, 0x00, 0xA3});
+//	tempSensor.addSensor((uint8_t *)(const uint8_t[]){0x28, 0x97, 0xDD, 0x3D, 0x00, 0x00, 0x00, 0x4D});
 	tempSensor.start();
 
 }
