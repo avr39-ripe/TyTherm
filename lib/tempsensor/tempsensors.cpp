@@ -64,6 +64,96 @@ void TempSensors::onHttpGet(HttpRequest &request, HttpResponse &response)
 	}
 }
 
+void TempSensors::onHttpConfig(HttpRequest &request, HttpResponse &response)
+{
+	if (request.getRequestMethod() == RequestMethod::POST)
+		{
+			if (request.getBody() == NULL)
+			{
+				debugf("NULL bodyBuf");
+				return;
+			}
+			else
+			{
+				uint8_t needSave = false;
+				DynamicJsonBuffer jsonBuffer;
+				JsonObject& root = jsonBuffer.parseObject(request.getBody());
+				root.prettyPrintTo(Serial); //Uncomment it for debuging
+				String queryParam = request.getQueryParameter("sensor", "-1");
+				if (queryParam != "-1")
+				{
+					uint8_t id = request.getQueryParameter("sensor").toInt();
+					if (root["calibration"].success()) // Settings
+					{
+	//					_targetTemp = ((float)(root["targetTemp"]) * 100);
+
+						_data[id]->_calibration = root["calibration"];
+						needSave = true;
+					}
+					if (needSave)
+					{
+						_saveBinConfig();
+					}
+				}
+			}
+		}
+		else
+		{
+			DynamicJsonBuffer jsonBuffer;
+			String buf;
+			JsonObject& root = jsonBuffer.createObject();
+			String queryParam = request.getQueryParameter("sensor", "-1");
+			if (queryParam == "-1")
+			{
+				for (uint8_t id=0; id < _data.count(); id++)
+				{
+					JsonObject& data = root.createNestedObject((String)id);
+					data["calibration"] = _data[id]->_calibration;
+				}
+			}
+			else
+			{
+				uint8_t id = request.getQueryParameter("sensor").toInt();
+				if (id >= 0 && id < _data.count())
+				{
+					root["calibration"] = _data[id]->_calibration;
+				}
+			}
+
+			root.printTo(buf);
+
+			response.setHeader("Access-Control-Allow-Origin", "*");
+			response.setContentType(ContentType::JSON);
+			response.sendString(buf);
+		}
+}
+
+void TempSensors::_saveBinConfig()
+{
+	Serial.printf("Try to save bin cfg..\n");
+	file_t file = fileOpen("tmpsensors", eFO_CreateIfNotExist | eFO_WriteOnly);
+	for (uint8_t id=0; id < _data.count(); id++)
+	{
+		fileWrite(file, &_data[id]->_calibration, sizeof(_data[id]->_calibration));
+	}
+	fileClose(file);
+}
+
+void TempSensors::_loadBinConfig()
+{
+	Serial.printf("Try to load bin cfg..\n");
+	if (fileExist("tmpsensors"))
+	{
+		Serial.printf("Will load bin cfg..\n");
+		file_t file = fileOpen("tmpsensors", eFO_ReadOnly);
+		fileSeek(file, 0, eSO_FileStart);
+		for (uint8_t id=0; id < _data.count(); id++)
+		{
+			fileRead(file, &_data[id]->_calibration, sizeof(_data[id]->_calibration));
+		}
+		fileClose(file);
+	}
+}
 //TempSensorsOW
 TempSensorsOW::TempSensorsOW(OneWire &ds, uint16_t refresh)
 :TempSensors(refresh)
