@@ -64,8 +64,12 @@ void init()
 	counterTimer.initializeMs(1000, counter_loop).start();
 
 	ds.begin();
-	tempSensor.addSensor();
-//	tempSensor.addSensor((String)"289D143E000000DB");
+//	tempSensor.addSensor();
+	tempSensor.addSensor((String)"28D6D53D00000031");
+	tempSensor.addSensor((String)"28FFB4400116014B");
+	tempSensor.addSensor((String)"28FF8C4301160179");
+	tempSensor.addSensor((String)"28FF9941011601D0");
+	tempSensor.addSensor((String)"28FFAAAC621501DA");
 ////	tempSensor.addSensor((uint8_t *)(const uint8_t[]){0x28, 0x9D, 0x14, 0x3E, 0x00, 0x00, 0x00, 0xDB});
 //	tempSensor.addSensor((String)"28E31D3E000000B4"); //Intendently ad address
 //	tempSensor.modifySensor(1,"28E31D3E000000A3"); //modify it do good one
