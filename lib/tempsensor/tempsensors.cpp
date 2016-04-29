@@ -186,33 +186,29 @@ void TempSensorsOW::_temp_read()
 		for (uint8_t i = 0; i < 9; i++)
 		{
 			_temp_data[i] = _ds->read();
-	//		Serial.printf("SP[%d]: %d", i, _temp_data[i]);
+//			Serial.printf("SP[%d]: %d", i, _temp_data[i]);
 		}
 
 		// Here we filter error, when NO DS18B20 actually connected
 		// According to DS18B20 datasheet scratchpad[5] == 0xFF and scratchpad[7] == 0x10
 		// At startup or when no GND connected scratchpad[0] == 0x50 and scratchpad[1] == 0x05
 		// It is not often temperature is 85.000 degree so we FILTER OUT precise 85.000 readings
-		if (_temp_data[5] != 0xFF || _temp_data[7] != 0x10)
+		if (_temp_data[5] == 0xFF && (_temp_data[7] == 0x10 || _temp_data[7] == 0x80))
 		{
-			Serial.printf("no DS18B20 device present at id: %d!\n", id);
-			_data[id]->_statusFlag = (TempSensorStatus::DISCONNECTED | TempSensorStatus::INVALID);
-			continue;
-		}
-		if (_temp_data[0] == 0x50 && _temp_data[1] == 0x05)
-		{
-			Serial.printf("DS18B20 id: %d invalid temperature\n", id);
-			_data[id]->_statusFlag = TempSensorStatus::INVALID;
-			continue;
-		}
-		if (OneWire::crc8(_temp_data, 8) != _temp_data[8])
-		{
-			Serial.printf("DS18B20 id: %d invalid crc!\n", id);
-			_data[id]->_statusFlag = TempSensorStatus::INVALID;
-			continue;
-		}
+			if (_temp_data[0] == 0x50 && _temp_data[1] == 0x05)
+			{
+				Serial.printf("DS18B20 id: %d invalid temperature\n", id);
+				_data[id]->_statusFlag = TempSensorStatus::INVALID;
+				continue;
+			}
+			if (OneWire::crc8(_temp_data, 8) != _temp_data[8])
+			{
+				Serial.printf("DS18B20 id: %d invalid crc!\n", id);
+				_data[id]->_statusFlag = TempSensorStatus::INVALID;
+				continue;
+			}
 
-		uint16_t tempRead = ((_temp_data[1] << 8) | _temp_data[0]); //using two's compliment
+			uint16_t tempRead = ((_temp_data[1] << 8) | _temp_data[0]); //using two's compliment
 
 			if (tempRead & 0x8000)
 				_data[id]->_temperature = 0 - ((float) ((tempRead ^ 0xffff) + 1) / 16.0);
@@ -222,7 +218,14 @@ void TempSensorsOW::_temp_read()
 			_data[id]->_statusFlag = 0; // current value of _temperature is GOOD, healthy
 			Serial.printf("ID: %d - ", id); Serial.println(_data[id]->_temperature);
 		}
+		else
+		{
+			Serial.printf("no DS18B20 device present at id: %d!\n", id);
+			_data[id]->_statusFlag = (TempSensorStatus::DISCONNECTED | TempSensorStatus::INVALID);
+			continue;
+		}
 	_temp_readTimer.stop();
+	}
 }
 
 //TempSensorsHttp
