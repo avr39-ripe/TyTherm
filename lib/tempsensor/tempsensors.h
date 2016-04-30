@@ -19,7 +19,8 @@ namespace TempSensorStatus
 struct sensorData
 {
 	float _temperature = 0;
-	float _calibration = 0;
+	float _calAdd = 0; //Additive calibration coefficient
+	float _calMult = 0; //Multiplicative calibration coefficient
 	uint8_t _statusFlag = 0;
 };
 
@@ -31,7 +32,7 @@ public:
 	void start();
 	void stop();
 	void addSensor();
-	float getTemp(uint8_t sensorId) { return _data[sensorId]->_temperature + _data[sensorId]->_calibration; };
+	float getTemp(uint8_t sensorId);
 	float getTemp() { return getTemp(0);}
 	uint8_t isValid(uint8_t sensorId) { return (_data[sensorId]->_statusFlag & TempSensorStatus::INVALID) ? 0 : 1; };
 	uint8_t isValid() { return isValid(0); }

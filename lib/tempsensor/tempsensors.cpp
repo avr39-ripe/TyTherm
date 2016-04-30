@@ -23,6 +23,11 @@ void TempSensors::stop()
 	_refreshTimer.stop();
 }
 
+float TempSensors::getTemp(uint8_t sensorId)
+{
+	return _data[sensorId]->_temperature * _data[sensorId]->_calMult + _data[sensorId]->_calAdd;
+};
+
 void TempSensors::addSensor()
 {
 	auto newSensorData = new sensorData;
@@ -83,11 +88,14 @@ void TempSensors::onHttpConfig(HttpRequest &request, HttpResponse &response)
 				if (queryParam != "-1")
 				{
 					uint8_t id = request.getQueryParameter("sensor").toInt();
-					if (root["calibration"].success()) // Settings
+					if (root["calAdd"].success()) // Settings
 					{
-	//					_targetTemp = ((float)(root["targetTemp"]) * 100);
-
-						_data[id]->_calibration = root["calibration"];
+						_data[id]->_calAdd = root["calAdd"];
+						needSave = true;
+					}
+					if (root["calMult"].success()) // Settings
+					{
+						_data[id]->_calMult = root["calMult"];
 						needSave = true;
 					}
 					if (needSave)
@@ -108,7 +116,8 @@ void TempSensors::onHttpConfig(HttpRequest &request, HttpResponse &response)
 				for (uint8_t id=0; id < _data.count(); id++)
 				{
 					JsonObject& data = root.createNestedObject((String)id);
-					data["calibration"] = _data[id]->_calibration;
+					data["calAdd"] = _data[id]->_calAdd;
+					data["calMult"] = _data[id]->_calMult;
 				}
 			}
 			else
@@ -116,7 +125,8 @@ void TempSensors::onHttpConfig(HttpRequest &request, HttpResponse &response)
 				uint8_t id = request.getQueryParameter("sensor").toInt();
 				if (id >= 0 && id < _data.count())
 				{
-					root["calibration"] = _data[id]->_calibration;
+					root["calAdd"] = _data[id]->_calAdd;
+					root["calMult"] = _data[id]->_calMult;
 				}
 			}
 
@@ -130,17 +140,22 @@ void TempSensors::onHttpConfig(HttpRequest &request, HttpResponse &response)
 
 void TempSensors::_saveBinConfig()
 {
+	int16_t tmpInt;
 	Serial.printf("Try to save bin cfg..\n");
 	file_t file = fileOpen("tmpsensors", eFO_CreateIfNotExist | eFO_WriteOnly);
 	for (uint8_t id=0; id < _data.count(); id++)
 	{
-		fileWrite(file, &_data[id]->_calibration, sizeof(_data[id]->_calibration));
+		tmpInt = (int16_t)_data[id]->_calAdd * 100;
+		fileWrite(file, &tmpInt, sizeof(tmpInt));
+		tmpInt = (int16_t)_data[id]->_calMult * 100;
+		fileWrite(file, &tmpInt, sizeof(tmpInt));
 	}
 	fileClose(file);
 }
 
 void TempSensors::_loadBinConfig()
 {
+	int16_t tmpInt;
 	Serial.printf("Try to load bin cfg..\n");
 	if (fileExist("tmpsensors"))
 	{
@@ -149,7 +164,10 @@ void TempSensors::_loadBinConfig()
 		fileSeek(file, 0, eSO_FileStart);
 		for (uint8_t id=0; id < _data.count(); id++)
 		{
-			fileRead(file, &_data[id]->_calibration, sizeof(_data[id]->_calibration));
+			fileRead(file, &tmpInt, sizeof(tmpInt));
+			_data[id]->_calAdd = (float)tmpInt / 100;
+			fileRead(file, &tmpInt, sizeof(tmpInt));
+			_data[id]->_calMult = (float)tmpInt / 100;
 		}
 		fileClose(file);
 	}
