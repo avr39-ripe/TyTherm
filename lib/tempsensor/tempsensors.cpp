@@ -25,7 +25,7 @@ void TempSensors::stop()
 
 float TempSensors::getTemp(uint8_t sensorId)
 {
-	return _data[sensorId]->_temperature * _data[sensorId]->_calMult + _data[sensorId]->_calAdd;
+	return (_data[sensorId]->_temperature * (float)(_data[sensorId]->_calMult / 100.0)) + (float)(_data[sensorId]->_calAdd / 100.0);
 };
 
 void TempSensors::addSensor()
@@ -140,22 +140,18 @@ void TempSensors::onHttpConfig(HttpRequest &request, HttpResponse &response)
 
 void TempSensors::_saveBinConfig()
 {
-	int16_t tmpInt;
 	Serial.printf("Try to save bin cfg..\n");
 	file_t file = fileOpen("tmpsensors", eFO_CreateIfNotExist | eFO_WriteOnly);
 	for (uint8_t id=0; id < _data.count(); id++)
 	{
-		tmpInt = (int16_t)_data[id]->_calAdd * 100;
-		fileWrite(file, &tmpInt, sizeof(tmpInt));
-		tmpInt = (int16_t)_data[id]->_calMult * 100;
-		fileWrite(file, &tmpInt, sizeof(tmpInt));
+		fileWrite(file, &_data[id]->_calAdd, sizeof(_data[id]->_calAdd));
+		fileWrite(file, &_data[id]->_calMult, sizeof(_data[id]->_calMult));
 	}
 	fileClose(file);
 }
 
 void TempSensors::_loadBinConfig()
 {
-	int16_t tmpInt;
 	Serial.printf("Try to load bin cfg..\n");
 	if (fileExist("tmpsensors"))
 	{
@@ -164,10 +160,8 @@ void TempSensors::_loadBinConfig()
 		fileSeek(file, 0, eSO_FileStart);
 		for (uint8_t id=0; id < _data.count(); id++)
 		{
-			fileRead(file, &tmpInt, sizeof(tmpInt));
-			_data[id]->_calAdd = (float)tmpInt / 100;
-			fileRead(file, &tmpInt, sizeof(tmpInt));
-			_data[id]->_calMult = (float)tmpInt / 100;
+			fileRead(file, &_data[id]->_calAdd, sizeof(_data[id]->_calAdd));
+			fileRead(file, &_data[id]->_calMult, sizeof(_data[id]->_calMult));
 		}
 		fileClose(file);
 	}
