@@ -1,10 +1,22 @@
+'use strict';
+
+// function updateState() {
+	// fetch('/state.json')
+  	// .then(function(response) {
+      // if (response.status == 200) return response.json();
+   // })
+  // .then(function(json) {
+    // document.getElementById('counter').textContent = json.counter;
+  // });
+// }
+
 const statusFlags = { INVALID: 1, DISCONNECTED: 2};
 
 function updateState() {
     var xhr = new XMLHttpRequest();
     var xhr1 = new XMLHttpRequest();
     
-    xhr1.open('GET', '/state', true);
+    xhr1.open('GET', '/state.json', true);
 
     xhr1.send();
 
@@ -13,7 +25,7 @@ function updateState() {
         if (this.readyState != 4) return;
         if (this.status == 200) {
             if (this.responseText.length > 0) {
-                stateJson = JSON.parse(this.responseText);
+                var stateJson = JSON.parse(this.responseText);
                 document.getElementById('counter').textContent = stateJson.counter;
             }
         }
@@ -62,7 +74,7 @@ function initTemperature() {
             return;
         if (this.status == 200) {
             if (this.responseText.length > 0) {
-                tempJson = JSON.parse(this.responseText);
+                var tempJson = JSON.parse(this.responseText);
                 Object.keys(tempJson).forEach(function(key) {
                     var colDiv = document.createElement('div');
                     colDiv.classList.add("col-xs-10");
