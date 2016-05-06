@@ -205,6 +205,7 @@ void ApplicationClass::_httpOnConfiguration(HttpRequest &request, HttpResponse &
 		{
 //Uncomment next line for extra debuginfo
 //			Serial.printf(request.getBody());
+			uint8_t needSave = false;
 			DynamicJsonBuffer jsonBuffer;
 			JsonObject& root = jsonBuffer.parseObject(request.getBody());
 //Uncomment next line for extra debuginfo
@@ -219,8 +220,20 @@ void ApplicationClass::_httpOnConfiguration(HttpRequest &request, HttpResponse &
 			{
 				Config.loopInterval = root["loopInterval"];
 				start(); // restart main application loop with new loopInterval setting
+				needSave = true;
 			}
-			Config.save();
+
+
+			if (root["updateURL"].success()) // There is loopInterval parameter in json
+			{
+				Config.updateURL = String((const char *)root["updateURL"]);
+				needSave = true;
+			}
+
+			if (needSave)
+			{
+				Config.save();
+			}
 		} // Request Body Not Empty
 	} // Request method is POST
 	else
@@ -275,6 +288,7 @@ void ApplicationClass::_httpOnConfigurationJson(HttpRequest &request, HttpRespon
 
 	//Application configuration parameters
 	json["loopInterval"] = Config.loopInterval;
+	json["updateURL"] = Config.updateURL;
 
 	response.sendJsonObject(stream);
 }
@@ -292,6 +306,7 @@ void ApplicationConfig::load()
 		JsonObject& root = jsonBuffer.parseObject(jsonString);
 
 		loopInterval = root["loopInterval"];
+		updateURL = String((const char *)root["updateURL"]);
 
 		delete[] jsonString;
 	}
@@ -299,6 +314,7 @@ void ApplicationConfig::load()
 	{
 		//Factory defaults if no config file present
 		loopInterval = 1000; // 1 second
+		updateURL = "http://192.168.31.181/";
 	}
 }
 
@@ -308,6 +324,7 @@ void ApplicationConfig::save()
 	JsonObject& root = jsonBuffer.createObject();
 
 	root["loopInterval"] = loopInterval;
+	root["updateURL"] = updateURL;
 
 	String buf;
 	root.printTo(buf);
@@ -350,7 +367,7 @@ void ApplicationClass::OtaUpdate() {
 
 #ifndef RBOOT_TWO_ROMS
 	// flash rom to position indicated in the rBoot config rom table
-	otaUpdater->addItem(bootconf.roms[slot], ROM_0_URL);
+	otaUpdater->addItem(bootconf.roms[slot], Config.updateURL + "rom0.bin");
 #else
 	// flash appropriate rom
 	if (slot == 0) {
@@ -363,9 +380,9 @@ void ApplicationClass::OtaUpdate() {
 #ifndef DISABLE_SPIFFS
 	// use user supplied values (defaults for 4mb flash in makefile)
 	if (slot == 0) {
-		otaUpdater->addItem(RBOOT_SPIFFS_0, SPIFFS_URL);
+		otaUpdater->addItem(RBOOT_SPIFFS_0, Config.updateURL + "spiff_rom.bin");
 	} else {
-		otaUpdater->addItem(RBOOT_SPIFFS_1, SPIFFS_URL);
+		otaUpdater->addItem(RBOOT_SPIFFS_1, Config.updateURL + "spiff_rom.bin");
 	}
 #endif
 

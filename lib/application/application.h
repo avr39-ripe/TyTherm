@@ -2,10 +2,6 @@
 #define INCLUDE_APPLICATION_H_
 #include <SmingCore/SmingCore.h>
 
-// download urls, set appropriately
-#define ROM_0_URL  "http://10.2.113.100:80/rom0.bin"
-#define ROM_1_URL  "http://10.2.113.100:80/rom1.bin"
-#define SPIFFS_URL "http://10.2.113.100:80/spiff_rom.bin"
 // If you want, you can define settings globally in Operation System ENV
 // or better in Eclipse Environment Variables
 
@@ -31,6 +27,7 @@ public:
 	void save();
 	// Configuration parameters goes next
 	uint32_t loopInterval = 0; // loop interval in ms
+	String updateURL; // Firmware update URL
 private:
 	String _fileName = APP_CONFIG_FILE;
 };
