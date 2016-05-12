@@ -45,6 +45,7 @@ void ApplicationClass::init()
 
 	// Attach Wifi events handlers
 	WifiEvents.onStationDisconnect(onStationDisconnectDelegate(&ApplicationClass::_STADisconnect, this));
+	WifiEvents.onStationConnect(onStationConnectDelegate(&ApplicationClass::_STAConnect, this));
 	WifiEvents.onStationAuthModeChange(onStationAuthModeChangeDelegate(&ApplicationClass::_STAAuthModeChange, this));
 	WifiEvents.onStationGotIP(onStationGotIPDelegate(&ApplicationClass::_STAGotIP, this));
 
@@ -103,6 +104,7 @@ void ApplicationClass::_STADisconnect(String ssid, uint8_t ssid_len, uint8_t bss
 {
 	debugf("DISCONNECT - SSID: %s, REASON: %d\n", ssid.c_str(), reason);
 
+	_reconnectTimer.stop();
 	if (!WifiAccessPoint.isEnabled())
 	{
 		debugf("Starting OWN AP");
@@ -130,13 +132,28 @@ void ApplicationClass::_STAGotIP(IPAddress ip, IPAddress mask, IPAddress gateway
 	debugf("GOTIP - IP: %s, MASK: %s, GW: %s\n", ip.toString().c_str(),
 																mask.toString().c_str(),
 																gateway.toString().c_str());
-
+	_reconnectTimer.stop();
 	if (WifiAccessPoint.isEnabled())
 	{
 		debugf("Shutdown OWN AP");
 		WifiAccessPoint.enable(false);
 	}
 	// Add commands to be executed after successfully connecting to AP and got IP from it
+}
+
+void ApplicationClass::_STAConnect(String ssid, uint8_t ssid_len, uint8_t bssid[6], uint8_t channel)
+{
+	debugf("DELEGATE CONNECT - SSID: %s, CHANNEL: %d\n", ssid.c_str(), channel);
+
+	wifi_station_dhcpc_set_maxtry(128);
+	_reconnectTimer.initializeMs(35000, TimerDelegate(&ApplicationClass::_STAReconnect,this)).start();
+	// Add commands to be executed after successfully connecting to AP
+}
+
+void ApplicationClass::_STAReconnect()
+{
+	WifiStation.disconnect();
+	WifiStation.connect();
 }
 
 void ApplicationClass::startWebServer()
