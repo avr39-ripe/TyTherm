@@ -47,7 +47,7 @@ void TempSensors::onHttpGet(HttpRequest &request, HttpResponse &response)
 			for (uint8_t id=0; id < _data.count(); id++)
 			{
 				JsonObject& data = root.createNestedObject((String)id);
-				data["temperature"] = _data[id]->_temperature;
+				data["temperature"] = getTemp(id);
 				data["statusFlag"] = _data[id]->_statusFlag;
 			}
 		}
@@ -56,7 +56,7 @@ void TempSensors::onHttpGet(HttpRequest &request, HttpResponse &response)
 			uint8_t id = request.getQueryParameter("sensor").toInt();
 			if (id >= 0 && id < _data.count())
 			{
-				root["temperature"] = _data[id]->_temperature;
+				root["temperature"] = getTemp(id);
 				root["statusFlag"] = _data[id]->_statusFlag;
 			}
 		}
