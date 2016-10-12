@@ -295,7 +295,7 @@ void TempSensorsOW::_temp_read()
 		// According to DS18B20 datasheet scratchpad[5] == 0xFF and scratchpad[7] == 0x10
 		// At startup or when no GND connected scratchpad[0] == 0x50 and scratchpad[1] == 0x05
 		// It is not often temperature is 85.000 degree so we FILTER OUT precise 85.000 readings
-		if (_temp_data[5] == 0xFF && (_temp_data[7] == 0x10 || _temp_data[7] == 0x80))
+		if (_temp_data[5] == 0xFF && (_temp_data[7] == 0x10 || _temp_data[7] == 0x80 || _temp_data[7] == 0xFF))
 		{
 			if (_temp_data[0] == 0x50 && _temp_data[1] == 0x05)
 			{

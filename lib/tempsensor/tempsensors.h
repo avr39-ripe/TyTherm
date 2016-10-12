@@ -20,7 +20,7 @@ struct sensorData
 {
 	float _temperature = 0;
 	int16_t _calAdd = 0; //Additive calibration coefficient * 100
-	int16_t _calMult = 0; //Multiplicative calibration coefficient * 100
+	int16_t _calMult = 100; //Multiplicative calibration coefficient * 100
 	uint8_t _statusFlag = 0;
 };
 
