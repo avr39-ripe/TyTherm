@@ -1,6 +1,7 @@
 #ifndef INCLUDE_APPLICATION_H_
 #define INCLUDE_APPLICATION_H_
 #include <SmingCore/SmingCore.h>
+#include <wsbinconst.h>
 
 // If you want, you can define settings globally in Operation System ENV
 // or better in Eclipse Environment Variables
@@ -17,20 +18,21 @@
 #endif
 //Main application config file name
 #ifndef APP_CONFIG_FILE
-	#define APP_CONFIG_FILE ".app.conf" // leading point for security reasons :)
+	#define APP_CONFIG_FILE "_app.conf" // leading point for security reasons :)
 #endif
 
-class ApplicationConfig
-{
-public:
-	void load();
-	void save();
-	// Configuration parameters goes next
-	uint32_t loopInterval = 0; // loop interval in ms
-	String updateURL; // Firmware update URL
-private:
-	String _fileName = APP_CONFIG_FILE;
-};
+//class ApplicationConfig
+//{
+//public:
+//	void load();
+//	void save();
+//	// Configuration parameters goes next
+//	uint32_t loopInterval = 0; // loop interval in ms
+//	String updateURL; // Firmware update URL
+//	uint8_t timeZone = 2;
+//private:
+//	String _fileName = APP_CONFIG_FILE;
+//};
 
 class ApplicationClass
 {
@@ -40,11 +42,15 @@ public:
 	virtual void init(); // Application initialization
 	virtual void start(); // Application main-loop start/restart
 	virtual void stop(); // Application main-loop stop
-	ApplicationConfig Config; // Instance of Configuration for application
+//	ApplicationConfig Config; // Instance of Configuration for application
 	HttpServer webServer; // instance of web server for application
 	void startWebServer(); // Start Application WebServer
 	rBootHttpUpdate* otaUpdater = 0;
-	void OtaUpdate_CallBack(bool result);
+	static const uint8_t sysId = 1;
+	void wsAddBinSetter(uint8_t sysId, WebSocketBinaryDelegate wsBinSetterDelegate);
+	void wsAddBinGetter(uint8_t sysId, WebSocketBinaryDelegate wsBinGetterDelegate);
+	virtual void userSTAGotIP(IPAddress ip, IPAddress mask, IPAddress gateway) {}; // Runs when Station got ip from access-point
+	void OtaUpdate_CallBack(rBootHttpUpdate& client, bool result);
 	void OtaUpdate();
 	void Switch();
 protected:
@@ -57,16 +63,32 @@ protected:
 	void _STAReconnect();
 	void _httpOnFile(HttpRequest &request, HttpResponse &response);
 	void _httpOnIndex(HttpRequest &request, HttpResponse &response);
-	void _httpOnStateJson(HttpRequest &request, HttpResponse &response);
 	void _httpOnConfiguration(HttpRequest &request, HttpResponse &response);
 	void _httpOnConfigurationJson(HttpRequest &request, HttpResponse &response);
 	void _httpOnUpdate(HttpRequest &request, HttpResponse &response);
 	void _handleWifiConfig(JsonObject& root);
+	void wsConnected(WebSocket& socket);
+	void wsDisconnected(WebSocket& socket);
+	void wsMessageReceived(WebSocket& socket, const String& message);
+	void wsBinaryReceived(WebSocket& socket, uint8_t* data, size_t size);
+	virtual void wsBinSetter(WebSocket& socket, uint8_t* data, size_t size);
+	virtual void wsBinGetter(WebSocket& socket, uint8_t* data, size_t size);
 	uint32_t _counter = 0; // Kind of heartbeat counter
-//	uint16_t _loopInterval;
 	Timer _loopTimer; // Timer for serving loop
 	Timer _reconnectTimer; // Timer for STA reconnect routine
 	uint8_t _webServerStarted = false;
 
+	HashMap<uint8_t,WebSocketBinaryDelegate> _wsBinSetters;
+	HashMap<uint8_t,WebSocketBinaryDelegate> _wsBinGetters;
+	// Configuration parameters goes next
+	uint32_t loopInterval = 1000; // loop interval in ms
+	String updateURL = "http://192.168.31.181/"; // Firmware update URL
+	uint8_t timeZone = 2;
+	//Binary configuration file name
+	String _fileName = APP_CONFIG_FILE;
+	void loadConfig();
+	void saveConfig();
+	virtual void _loadAppConfig(file_t file) {}; //override this in child class to load additional config values
+	virtual void _saveAppConfig(file_t file) {}; //override this in child class to save additional config values
 };
 #endif /* INCLUDE_HEATCONTROL_H_ */
