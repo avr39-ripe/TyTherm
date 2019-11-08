@@ -18,7 +18,7 @@ void AppClass::init()
 
 	ApplicationClass::init();
 
-	webServer.addPath("/temperature.json",HttpPathDelegate(&TempSensors::onHttpGet,tempSensor));
+	webServer.paths.set("/temperature.json",HttpPathDelegate(&TempSensors::onHttpGet,(TempSensors*)tempSensor));
 }
 
 void AppClass::start()

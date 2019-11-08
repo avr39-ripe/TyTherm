@@ -5,8 +5,7 @@
  *      Author: shurik
  */
 
-#ifndef INCLUDE_APP_H_
-#define INCLUDE_APP_H_
+#pragma once
 #include <application.h>
 
 class AppClass : public ApplicationClass
@@ -17,7 +16,3 @@ public:
 protected:
 	virtual void _loop(); // Application main loop function goes here
 };
-
-
-
-#endif /* INCLUDE_APP_H_ */
