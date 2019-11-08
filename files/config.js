@@ -90,11 +90,11 @@ function onError(evt) {
 }
 
 function initWS() {
-	var wsUri = "ws://" + location.host + "/";
+	var wsUri = "ws://" + location.host + "/ws";
 	websocket = new WebSocket(wsUri);
 	websocket.onopen = function(evt) { onOpen(evt) };
 	websocket.onclose = function(evt) { onClose(evt) };
-	websocket.onmessage = function(evt) { onMessage(evt) };
+	websocket.onmessage = function(evt) { onMessage (evt) };
 	websocket.onerror = function(evt) { onError(evt) };
 	websocket.binaryType = 'arraybuffer';
 }
