@@ -2,3 +2,5 @@ out/
 .settings/
 .cproject
 .project
+files/index.*.js*
+files/index.html*
